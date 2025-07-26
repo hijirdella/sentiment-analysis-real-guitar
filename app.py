@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import pytz
 from datetime import datetime
+from matplotlib.ticker import FuncFormatter
 
 # === Load model dan komponen ===
 model = joblib.load('XGBClassifier - Real Guitar.pkl')
@@ -129,14 +130,22 @@ else:
                 fig_bar, ax_bar = plt.subplots()
                 bars = ax_bar.bar(bar_data['Sentimen'], bar_data['Jumlah'], color=colors)
 
+                max_jumlah = bar_data['Jumlah'].max()
+                ax_bar.set_ylim(0, max_jumlah * 1.10)
+
                 for bar in bars:
                     height = bar.get_height()
-                    ax_bar.text(bar.get_x() + bar.get_width() / 2, height + 0.5, f'{int(height)}',
-                                ha='center', va='bottom', fontsize=10)
+                    ax_bar.text(
+                        bar.get_x() + bar.get_width() / 2,
+                        height + max_jumlah * 0.01,
+                        f'{int(height):,}'.replace(',', '.'),
+                        ha='center', va='bottom', fontsize=10
+                    )
 
                 ax_bar.set_ylabel("Jumlah")
                 ax_bar.set_xlabel("Sentimen")
                 ax_bar.set_title("Distribusi Sentimen Pengguna – Real Guitar")
+                ax_bar.yaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{int(x):,}'.replace(',', '.')))
                 st.pyplot(fig_bar)
 
                 # === Pie Chart ===
@@ -146,7 +155,7 @@ else:
 
                 def autopct_format(pct, allvals):
                     absolute = int(round(pct / 100. * sum(allvals)))
-                    return f"{pct:.1f}%\n({absolute})"
+                    return f"{pct:.1f}%\n({absolute:,})".replace(',', '.')
 
                 fig_pie, ax_pie = plt.subplots()
                 ax_pie.pie(
@@ -154,7 +163,8 @@ else:
                     labels=pie_data.index,
                     colors=pie_colors,
                     autopct=lambda pct: autopct_format(pct, pie_data),
-                    startangle=90
+                    startangle=90,
+                    textprops={'fontsize': 10}
                 )
                 ax_pie.axis('equal')
                 st.pyplot(fig_pie)
